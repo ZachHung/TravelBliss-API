@@ -4,9 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node dist/index.js",
     "start:dev": "pnpm exec ts-node-dev --respawn --clear src/index.ts",
-    "build": "pnpm typeorm && pnpm tsc",
+    "build": "pnpm tsc",
     "typeorm": "pnpm exec typeorm-ts-node-commonjs -d ./src/config/data-source.ts",
     "migration:generate": "pnpm typeorm migration:generate ./src/migration/migration",
     "migration:run": "pnpm typeorm migration:run",
