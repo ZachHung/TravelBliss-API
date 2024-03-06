@@ -1,31 +1,25 @@
-import * as dotenv from 'dotenv';
-import jwt from 'jsonwebtoken';
 import { AuthCheckerInterface, ResolverData } from 'type-graphql';
 import { PostgresDataSource } from '../../config/data-source';
 import { User } from '../../modules/user/user.entity';
-import { Context, UserPayload } from '../../types';
-import { getEnv } from '../../utils/helpers';
+import { Context } from '../../types';
 import { Injectable } from '../../types/inversify';
+import { dotenvInit } from '../../utils/helpers';
 
-dotenv.config();
+dotenvInit();
 
 @Injectable()
 export class CustomAuthChecker implements AuthCheckerInterface<Context> {
   async check({ context }: ResolverData<Context>, roles: string[]): Promise<boolean> {
     try {
-      const authorization = context.req.headers.authorization;
-      if (!authorization) return false;
-      const [schema, token] = authorization.split(' ');
-      if (schema !== 'Bearer') return false;
-      const payload = jwt.verify(token, getEnv('SECRET_JWT')) as UserPayload;
+      const userId = context.req.session.userId;
+      if (!userId) return false;
       //
       const userRepo = PostgresDataSource.getRepository(User);
 
-      const user = await userRepo.findOne({ where: { id: payload.id } });
+      const user = await userRepo.findOne({ where: { id: userId } });
       if (!user) return false;
 
       if (!roles.includes(user.role) && roles.length !== 0) return false;
-      context.user = payload;
       return true;
     } catch (error) {
       return false;

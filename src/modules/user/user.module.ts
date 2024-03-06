@@ -1,11 +1,11 @@
 import { ContainerModule } from 'inversify';
 
-import { UserService } from './user.service';
+import TOKEN from '../../core/container/types.container';
 import Service from '../../core/shared/service';
 import { User } from './user.entity';
-import TOKEN from '../../core/container/types.container';
-import { UserResolver } from './user.resolver';
 import { UserRepository } from './user.repository';
+import { UserResolver } from './user.resolver';
+import { UserService } from './user.service';
 
 export class UserModule extends ContainerModule {
   constructor() {

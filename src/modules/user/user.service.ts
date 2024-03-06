@@ -1,17 +1,17 @@
-import { ChangePasswordInput, EditInfoInput, LoginInput, RegisterInput } from './user.input';
-import { User } from './user.entity';
 import bcrypt from 'bcrypt';
-import * as dotenv from 'dotenv';
-import jwt from 'jsonwebtoken';
 import { GraphQLError } from 'graphql';
-import Service from '../../core/shared/service';
-import { UserRepository } from './user.repository';
-import { getEnv, mutationReturn } from '../../utils/helpers';
-import { UserTokens } from './user.type';
+import jwt from 'jsonwebtoken';
 import TOKEN from '../../core/container/types.container';
+import Service from '../../core/shared/service';
+import { Context } from '../../types';
 import { Inject, Injectable } from '../../types/inversify';
+import { dotenvInit, getEnv, mutationReturn } from '../../utils/helpers';
+import { User } from './user.entity';
+import { ChangePasswordInput, EditInfoInput, LoginInput, RegisterInput } from './user.input';
+import { UserRepository } from './user.repository';
+import { UserTokens } from './user.type';
 
-dotenv.config();
+dotenvInit();
 @Injectable()
 export class UserService implements Service<User> {
   constructor(@Inject(TOKEN.Repositories.User) private readonly userRepository: UserRepository) {}
@@ -29,11 +29,12 @@ export class UserService implements Service<User> {
     return newUser;
   }
 
-  async login(input: LoginInput): Promise<UserTokens> {
-    const { password, usernameOrEmail } = input;
+  async login(input: LoginInput, context: Context): Promise<UserTokens> {
+    const { password, usernameOrEmailOrPhone } = input;
     const user = await this.userRepository.findOneBy([
-      { username: usernameOrEmail },
-      { email: usernameOrEmail },
+      { username: usernameOrEmailOrPhone },
+      { email: usernameOrEmailOrPhone },
+      { phoneNumber: usernameOrEmailOrPhone },
     ]);
 
     if (!user) throw new GraphQLError('Invalid credentials');
@@ -49,10 +50,28 @@ export class UserService implements Service<User> {
 
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
+
+    context.req.session.userId = user.id;
+    context.req.session.role = user.role;
+
     return {
       accessToken,
       refreshToken,
     };
+  }
+
+  async logout(ctx: Context): Promise<boolean> {
+    return new Promise((resolve) =>
+      ctx.req.session.destroy((err) => {
+        ctx.res.clearCookie(process.env.COOKIE_NAME!);
+
+        if (err) {
+          throw new GraphQLError(err);
+        }
+
+        resolve(true);
+      }),
+    );
   }
 
   async getAll(): Promise<User[]> {
