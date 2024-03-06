@@ -16,7 +16,7 @@ export class ErrorLoggerMiddleware implements MiddlewareInterface<Context> {
             message: err.message,
             operation: info.operation.operation,
             fieldName: info.fieldName,
-            user: context.user,
+            user: context.req.session.userId,
             stack: err.stack,
             locations: err.locations,
           }),

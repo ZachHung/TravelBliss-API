@@ -16,8 +16,8 @@ export class UserResolver {
 
   @Authorized()
   @Query((_type) => User)
-  public async me(@Ctx() { user }: Required<Context>): Promise<User> {
-    const response = await this.userService.findById(user.id);
+  public async me(@Ctx() { req }: Required<Context>): Promise<User> {
+    const response = await this.userService.findById(req.session.userId);
     return response;
   }
 
@@ -35,8 +35,14 @@ export class UserResolver {
   }
 
   @Mutation((_type) => UserTokens)
-  public async login(@Arg('input') input: LoginInput): Promise<UserTokens> {
-    const response = await this.userService.login(input);
+  public async login(@Arg('input') input: LoginInput, @Ctx() ctx: Context): Promise<UserTokens> {
+    const response = await this.userService.login(input, ctx);
+    return response;
+  }
+
+  @Mutation(() => Boolean)
+  async logout(@Ctx() ctx: Context): Promise<boolean> {
+    const response = await this.userService.logout(ctx);
     return response;
   }
 
@@ -44,9 +50,9 @@ export class UserResolver {
   @Mutation((_type) => User)
   public async editInfoUser(
     @Arg('input') input: EditInfoInput,
-    @Ctx() { user }: Required<Context>,
+    @Ctx() { req }: Required<Context>,
   ): Promise<User> {
-    const response = await this.userService.editInfo(input, user.id);
+    const response = await this.userService.editInfo(input, req.session.userId);
     return response;
   }
 
@@ -54,9 +60,9 @@ export class UserResolver {
   @Mutation(() => User)
   public async changePasswordUser(
     @Arg('input') input: ChangePasswordInput,
-    @Ctx() { user }: Required<Context>,
+    @Ctx() { req }: Required<Context>,
   ): Promise<User> {
-    const response = await this.userService.changePassword(input, user.id);
+    const response = await this.userService.changePassword(input, req.session.userId);
     return response;
   }
 }

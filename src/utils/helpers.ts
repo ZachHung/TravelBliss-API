@@ -1,4 +1,9 @@
 import { DeleteResult, InsertResult, UpdateResult } from 'typeorm';
+import dotenv from 'dotenv';
+
+export const dotenvInit = (): void => {
+  dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
+};
 
 export const getEnv = (name: string): string => {
   const value = process.env[name];

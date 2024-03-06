@@ -18,6 +18,9 @@ export class RegisterInput implements Partial<User> {
   @Field()
   public readonly lastName!: string;
 
+  @Field()
+  public readonly phoneNumber!: string;
+
   @MinLength(6)
   @Field()
   public readonly password!: string;
@@ -33,7 +36,7 @@ export class LoginInput implements Readonly<Pick<User, 'password'>> {
   public readonly password!: string;
 
   @Field()
-  public readonly usernameOrEmail!: string;
+  public readonly usernameOrEmailOrPhone!: string;
 }
 
 @InputType()

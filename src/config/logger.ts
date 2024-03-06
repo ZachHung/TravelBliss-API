@@ -1,8 +1,7 @@
 import moment from 'moment';
-import { createLogger, transports, format } from 'winston';
-import * as dotenv from 'dotenv';
-import { getEnv } from '../utils/helpers';
-dotenv.config();
+import { createLogger, format, transports } from 'winston';
+import { dotenvInit, getEnv } from '../utils/helpers';
+dotenvInit();
 
 const logger = createLogger({
   format: format.combine(
@@ -22,6 +21,8 @@ const logger = createLogger({
 });
 
 if (getEnv('NODE_ENV') !== 'production') {
+  const env = getEnv('NODE_ENV').toUpperCase();
+
   logger.add(
     new transports.Console({
       format: format.combine(
@@ -30,7 +31,7 @@ if (getEnv('NODE_ENV') !== 'production') {
           format: () => moment().local().format('HH:mm:ss'),
         }),
         format.printf(({ timestamp, level, message }) => {
-          return `[${timestamp}] [${level}]: ${message}`;
+          return `[${env}] [${timestamp}] [${level}]: ${message}`;
         }),
       ),
     }),
