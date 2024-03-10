@@ -75,7 +75,6 @@ export const bootstrap = async (): Promise<void> => {
           maxAge: 1000 * 60 * 60 * 24 * 14,
           httpOnly: true,
           sameSite: getEnv('NODE_ENV') === 'production' ? 'none' : 'lax',
-          secure: getEnv('NODE_ENV') === 'production',
         },
         resave: false,
         saveUninitialized: false,
