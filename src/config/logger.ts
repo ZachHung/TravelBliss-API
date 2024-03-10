@@ -20,21 +20,18 @@ const logger = createLogger({
   ],
 });
 
-if (getEnv('NODE_ENV') !== 'production') {
-  const env = getEnv('NODE_ENV').toUpperCase();
-
-  logger.add(
-    new transports.Console({
-      format: format.combine(
-        format.colorize(),
-        format.timestamp({
-          format: () => moment().local().format('HH:mm:ss'),
-        }),
-        format.printf(({ timestamp, level, message }) => {
-          return `[${env}] [${timestamp}] [${level}]: ${message}`;
-        }),
-      ),
-    }),
-  );
-}
+const env = getEnv('NODE_ENV').toUpperCase();
+logger.add(
+  new transports.Console({
+    format: format.combine(
+      format.colorize(),
+      format.timestamp({
+        format: () => moment().local().format('HH:mm:ss'),
+      }),
+      format.printf(({ timestamp, level, message }) => {
+        return `[${env}] [${timestamp}] [${level}]: ${message}`;
+      }),
+    ),
+  }),
+);
 export default logger;
