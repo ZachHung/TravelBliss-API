@@ -43,8 +43,6 @@ export const bootstrap = async (): Promise<void> => {
 
     const redisClient = new Redis(getEnv('REDIS_URI'));
 
-    app.set('trust proxy', process.env.NODE_ENV !== 'production');
-
     const server = new ApolloServer<Context>({
       schema,
       csrfPrevention: true,
@@ -52,14 +50,17 @@ export const bootstrap = async (): Promise<void> => {
 
       plugins: [
         ApolloServerPluginInlineTrace(),
-        ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+        ApolloServerPluginLandingPageLocalDefault({
+          embed: { endpointIsEditable: false },
+          includeCookies: true,
+        }),
         ApolloServerPluginDrainHttpServer({ httpServer }),
       ],
       introspection: true,
     });
     await server.start();
     app.use(
-      '/graphql',
+      '/',
       cors<cors.CorsRequest>({
         origin: 'http://localhost:5173',
         credentials: true,
@@ -72,7 +73,7 @@ export const bootstrap = async (): Promise<void> => {
         cookie: {
           maxAge: 1000 * 60 * 60 * 24 * 14,
           httpOnly: true,
-          sameSite: 'strict',
+          sameSite: 'none',
           secure: getEnv('NODE_ENV') === 'production',
         },
         resave: false,
@@ -93,9 +94,7 @@ export const bootstrap = async (): Promise<void> => {
 
     httpServer.listen(+getEnv('PORT'), () =>
       logger.info(
-        `Server running in ${getEnv('NODE_ENV')} mode at http://localhost:${getEnv(
-          'PORT',
-        )}/${'graphql'}`,
+        `Server running in ${getEnv('NODE_ENV')} mode at http://localhost${getEnv('PORT') && ':' + getEnv('PORT')}`,
       ),
     );
   } catch (error: unknown) {
