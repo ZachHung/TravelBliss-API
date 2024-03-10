@@ -16,7 +16,7 @@ export const postgresConfig: DataSourceOptions = {
   entities: [join(__dirname, '..', '/modules/**/*.entity.{ts,js}')],
   migrations: [join(__dirname, '..', '/migration/*.{js,ts}')],
   connectTimeoutMS: 10000,
-  ssl: getEnv('NODE_ENV') === 'local',
+  ssl: getEnv('NODE_ENV') === 'local' || getEnv('NODE_ENV') === 'production',
 };
 
 export const PostgresDataSource = new DataSource(postgresConfig);
