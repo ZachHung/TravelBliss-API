@@ -55,6 +55,7 @@ export const bootstrap = async (): Promise<void> => {
         ApolloServerPluginLandingPageLocalDefault({ embed: true }),
         ApolloServerPluginDrainHttpServer({ httpServer }),
       ],
+      introspection: true,
     });
     await server.start();
     app.use(
