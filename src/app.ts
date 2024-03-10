@@ -59,6 +59,7 @@ export const bootstrap = async (): Promise<void> => {
       introspection: true,
     });
     await server.start();
+    app.set('trust proxy', getEnv('NODE_ENV') === 'production');
     app.use(
       '/',
       cors<cors.CorsRequest>({
@@ -73,7 +74,7 @@ export const bootstrap = async (): Promise<void> => {
         cookie: {
           maxAge: 1000 * 60 * 60 * 24 * 14,
           httpOnly: true,
-          sameSite: 'none',
+          sameSite: getEnv('NODE_ENV') === 'production' ? 'none' : 'lax',
           secure: getEnv('NODE_ENV') === 'production',
         },
         resave: false,
