@@ -35,6 +35,7 @@ export const bootstrap = async (): Promise<void> => {
     const httpServer = http.createServer(app);
     await PostgresDataSource.initialize();
     const schema = await buildSchema({
+      emitSchemaFile: true,
       resolvers: resolvers,
       globalMiddlewares: [ErrorLoggerMiddleware],
       authChecker: CustomAuthChecker,
