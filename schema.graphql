@@ -74,5 +74,4 @@ type User {
 
 type UserTokens {
   accessToken: String!
-  refreshToken: String!
 }

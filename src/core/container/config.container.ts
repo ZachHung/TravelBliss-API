@@ -1,10 +1,12 @@
 import { Container } from 'inversify';
-import { UserModule } from '../../modules/user/user.module';
 import { DataSource } from 'typeorm';
-import TOKEN from './types.container';
+
 import { PostgresDataSource } from '../../config/data-source';
+import { UserModule } from '../../modules/user/user.module';
 import { CustomAuthChecker } from '../middlewares/auth-checker.middleware';
 import { ErrorLoggerMiddleware } from '../middlewares/error-logger.middleware';
+
+import TOKEN from './types.container';
 
 const container = new Container({ skipBaseClassChecks: true, defaultScope: 'Singleton' });
 

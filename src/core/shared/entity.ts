@@ -6,13 +6,13 @@ import { CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class BaseEntity {
   @Field()
   @PrimaryGeneratedColumn('uuid')
-  readonly id!: string;
+  public readonly id: string;
 
   @Field()
   @CreateDateColumn()
-  readonly createdAt: Date;
+  public readonly createdAt: Date;
 
   @Field()
   @CreateDateColumn()
-  readonly updatedAt: Date;
+  public readonly updatedAt: Date;
 }

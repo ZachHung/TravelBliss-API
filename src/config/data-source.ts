@@ -1,8 +1,9 @@
 import { join } from 'path';
+
 import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { dotenvInit, getEnv } from '../utils/helpers';
-dotenvInit();
+
+import { getEnv } from '../utils/helpers';
 
 export const postgresConfig: DataSourceOptions = {
   type: 'postgres',
@@ -16,7 +17,7 @@ export const postgresConfig: DataSourceOptions = {
   entities: [join(__dirname, '..', '/modules/**/*.entity.{ts,js}')],
   migrations: [join(__dirname, '..', '/migration/*.{js,ts}')],
   connectTimeoutMS: 10000,
-  ssl: getEnv('NODE_ENV') === 'local' || getEnv('NODE_ENV') === 'production',
+  ssl: getEnv('NODE_ENV') === 'development' || getEnv('NODE_ENV') === 'production',
 };
 
 export const PostgresDataSource = new DataSource(postgresConfig);

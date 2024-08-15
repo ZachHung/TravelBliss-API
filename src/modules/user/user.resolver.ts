@@ -1,13 +1,14 @@
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 
 import TOKEN from '../../core/container/types.container';
+import { Context } from '../../types';
+import { Role } from '../../types/enums';
+import { Inject, Injectable } from '../../types/inversify';
+
 import { User } from './user.entity';
 import { ChangePasswordInput, EditInfoInput, LoginInput, RegisterInput } from './user.input';
 import { UserService } from './user.service';
 import { UserTokens } from './user.type';
-import { Context } from '../../types';
-import { Role } from '../../types/enums';
-import { Inject, Injectable } from '../../types/inversify';
 
 @Injectable()
 @Resolver(() => User)
@@ -16,8 +17,8 @@ export class UserResolver {
 
   @Authorized()
   @Query((_type) => User)
-  public async me(@Ctx() { req }: Required<Context>): Promise<User> {
-    const response = await this.userService.findById(req.session.userId);
+  public async me(@Ctx() { auth: { userId } }: Required<Context>): Promise<User> {
+    const response = await this.userService.findById(userId);
     return response;
   }
 
@@ -41,18 +42,18 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  async logout(@Ctx() ctx: Context): Promise<boolean> {
-    const response = await this.userService.logout(ctx);
-    return response;
+  public async logout(@Ctx() ctx: Required<Context>): Promise<boolean> {
+    const shouldResolve = await this.userService.logout(ctx);
+    return shouldResolve;
   }
 
   @Authorized()
   @Mutation((_type) => User)
   public async editInfoUser(
     @Arg('input') input: EditInfoInput,
-    @Ctx() { req }: Required<Context>,
+    @Ctx() { auth: { userId } }: Required<Context>,
   ): Promise<User> {
-    const response = await this.userService.editInfo(input, req.session.userId);
+    const response = await this.userService.editInfo(input, userId);
     return response;
   }
 
@@ -60,9 +61,9 @@ export class UserResolver {
   @Mutation(() => User)
   public async changePasswordUser(
     @Arg('input') input: ChangePasswordInput,
-    @Ctx() { req }: Required<Context>,
+    @Ctx() { auth: { userId } }: Required<Context>,
   ): Promise<User> {
-    const response = await this.userService.changePassword(input, req.session.userId);
+    const response = await this.userService.changePassword(input, userId);
     return response;
   }
 }

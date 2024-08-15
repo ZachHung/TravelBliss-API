@@ -1,13 +1,15 @@
 import { Request, Response } from 'express';
-import { JwtPayload } from 'jsonwebtoken';
-import { Role } from './enums';
 
-export type UserPayload = JwtPayload & { userId: string; role: Role };
-
-export interface Context {
-  req: Request & { session: UserPayload };
-  res: Response;
+export interface AuthContext {
+  userId: string;
+  token: string;
+  exp: number;
 }
 
-export type RequiredContext = Required<Context>;
+export interface Context {
+  req: Request;
+  res: Response;
+  auth?: AuthContext;
+}
+
 export type Constructor<T> = new () => T;

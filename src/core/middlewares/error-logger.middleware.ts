@@ -1,12 +1,16 @@
-import { MiddlewareFn, MiddlewareInterface, NextFn, ResolverData } from 'type-graphql';
-import logger from '../../config/logger';
 import { GraphQLError } from 'graphql';
+import { MiddlewareFn, MiddlewareInterface, NextFn, ResolverData } from 'type-graphql';
+
+import logger from '../../config/logger';
 import { Context } from '../../types';
 import { Injectable } from '../../types/inversify';
 
 @Injectable()
 export class ErrorLoggerMiddleware implements MiddlewareInterface<Context> {
-  use: MiddlewareFn<Context> = async ({ context, info }: ResolverData<Context>, next: NextFn) => {
+  public use: MiddlewareFn<Context> = async (
+    { context, info }: ResolverData<Context>,
+    next: NextFn,
+  ) => {
     try {
       return await next();
     } catch (err) {
@@ -16,7 +20,7 @@ export class ErrorLoggerMiddleware implements MiddlewareInterface<Context> {
             message: err.message,
             operation: info.operation.operation,
             fieldName: info.fieldName,
-            user: context.req.session.userId,
+            auth: context.auth,
             stack: err.stack,
             locations: err.locations,
           }),
