@@ -1,42 +1,40 @@
-import { Entity, Column, OneToMany } from 'typeorm';
 import { Authorized, Field, ObjectType } from 'type-graphql';
-import { Role } from '../../types/enums';
+import { Column, Entity } from 'typeorm';
+
 import { BaseEntity } from '../../core/shared/entity';
+import { Role } from '../../types/enums';
 
 @ObjectType()
 @Entity()
 export class User extends BaseEntity {
   @Field()
   @Column()
-  public firstName!: string;
+  public readonly firstName: string;
 
   @Field()
   @Column()
-  public lastName!: string;
+  public readonly lastName: string;
 
   @Field()
   @Column()
-  public age!: number;
+  public readonly age: number;
 
   @Authorized(Role.ADMIN)
   @Field({ nullable: true })
   @Column()
-  public password!: string;
+  public readonly password: string;
 
   @Field()
   @Column({ unique: true })
-  public email!: string;
+  public readonly email: string;
 
   @Field()
   @Column({ unique: true })
-  public phoneNumber!: string;
+  public readonly phoneNumber: string;
 
   @Field()
   @Column({ unique: true })
-  public username!: string;
-
-  @Column({ nullable: true })
-  public refreshToken?: string;
+  public readonly username: string;
 
   @Authorized(Role.ADMIN)
   @Field(() => Role, { nullable: true })
@@ -45,9 +43,9 @@ export class User extends BaseEntity {
     enum: Role,
     default: Role.USER,
   })
-  public role!: Role;
+  public readonly role: Role;
 
   // @Field(() => [Post], { nullable: 'items' })
   // @OneToMany(() => Post, (post: Post) => post.user)
-  // public posts?: Promise<Post[]>;
+  // private readonly posts?: Promise<Post[]>;
 }

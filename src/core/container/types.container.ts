@@ -9,6 +9,10 @@ const TOKEN = {
   Services: {
     User: Symbol.for('UserService'),
   },
+
+  Store: {
+    Redis: Symbol.for('RedisStore'),
+  },
 };
 
 export default TOKEN;

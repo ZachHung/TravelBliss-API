@@ -31,6 +31,7 @@ type Mutation {
   editInfoUser(input: EditInfoInput!): User!
   login(input: LoginInput!): UserTokens!
   logout: Boolean!
+  refreshToken: UserTokens!
   register(input: RegisterInput!): User!
 }
 
@@ -74,5 +75,4 @@ type User {
 
 type UserTokens {
   accessToken: String!
-  refreshToken: String!
 }
