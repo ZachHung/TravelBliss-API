@@ -36,9 +36,6 @@ export class User extends BaseEntity {
   @Column({ unique: true })
   public readonly username: string;
 
-  @Column({ nullable: true })
-  public readonly refreshToken?: string;
-
   @Authorized(Role.ADMIN)
   @Field(() => Role, { nullable: true })
   @Column({

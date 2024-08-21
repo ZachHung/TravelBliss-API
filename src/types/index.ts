@@ -12,4 +12,9 @@ export interface Context {
   auth?: AuthContext;
 }
 
+export const REDIS_KEY = {
+  BLACK_LIST: 'blacklist:',
+  REFRESH_TOKEN: 'refreshToken:',
+} as const;
+
 export type Constructor<T> = new () => T;

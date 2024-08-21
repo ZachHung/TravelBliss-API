@@ -1,5 +1,4 @@
 import { config } from 'dotenv';
-import { GraphQLError } from 'graphql';
 import { JwtPayload, verify } from 'jsonwebtoken';
 import { DeleteResult, InsertResult, UpdateResult } from 'typeorm';
 
@@ -22,10 +21,16 @@ export const mutationReturn = async <T>(
   return (await mutation).raw[0];
 };
 
-export const verifyToken = async (token: string): Promise<AuthContext | undefined> => {
+export const verifyToken = async (
+  token: string,
+  secret?: string,
+): Promise<AuthContext | undefined> => {
   if (!token) return;
   try {
-    const { userId, exp } = verify(token, getEnv('SECRET_JWT')) as Required<JwtPayload> & {
+    const { userId, exp } = verify(
+      token,
+      secret || getEnv('SECRET_JWT'),
+    ) as Required<JwtPayload> & {
       userId: string;
     };
     return {
@@ -33,7 +38,7 @@ export const verifyToken = async (token: string): Promise<AuthContext | undefine
       exp,
       token,
     };
-  } catch (error) {
-    throw new GraphQLError('Invalid token');
+  } catch {
+    return;
   }
 };

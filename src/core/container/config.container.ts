@@ -2,6 +2,7 @@ import { Container } from 'inversify';
 import { DataSource } from 'typeorm';
 
 import { PostgresDataSource } from '../../config/data-source';
+import redisClient from '../../config/redis';
 import { UserModule } from '../../modules/user/user.module';
 import { CustomAuthChecker } from '../middlewares/auth-checker.middleware';
 import { ErrorLoggerMiddleware } from '../middlewares/error-logger.middleware';
@@ -19,5 +20,7 @@ container
   .bind<ErrorLoggerMiddleware>(ErrorLoggerMiddleware)
   .to(ErrorLoggerMiddleware)
   .inSingletonScope();
+
+container.bind(TOKEN.Store.Redis).toConstantValue(redisClient);
 
 export default container;

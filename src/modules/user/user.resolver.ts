@@ -41,6 +41,14 @@ export class UserResolver {
     return response;
   }
 
+  @Authorized()
+  @Mutation((_type) => UserTokens)
+  public async refreshToken(@Ctx() ctx: Required<Context>): Promise<UserTokens> {
+    const response = await this.userService.refreshToken(ctx);
+    return response;
+  }
+
+  @Authorized()
   @Mutation(() => Boolean)
   public async logout(@Ctx() ctx: Required<Context>): Promise<boolean> {
     const shouldResolve = await this.userService.logout(ctx);

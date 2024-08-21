@@ -5,6 +5,7 @@ import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { json } from 'express';
 import { buildSchema } from 'type-graphql';
@@ -46,6 +47,7 @@ export const bootstrap = async (): Promise<void> => {
   });
   await server.start();
   app.set('trust proxy', getEnv('NODE_ENV') === 'production');
+  app.use(cookieParser());
   app.use(
     '/',
     cors<cors.CorsRequest>({

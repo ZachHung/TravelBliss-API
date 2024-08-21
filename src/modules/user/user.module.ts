@@ -1,6 +1,5 @@
 import { ContainerModule } from 'inversify';
 
-import redisClient from '../../config/redis';
 import TOKEN from '../../core/container/types.container';
 import Service from '../../core/shared/service';
 
@@ -15,7 +14,6 @@ export class UserModule extends ContainerModule {
       bind<Service<User>>(TOKEN.Services.User).to(UserService);
       bind<UserResolver>(UserResolver).toSelf();
       bind<UserRepository>(TOKEN.Repositories.User).to(UserRepository);
-      bind(TOKEN.Store.Redis).toConstantValue(redisClient);
     });
   }
 }
