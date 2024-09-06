@@ -13,7 +13,7 @@ export class UserRepository extends Repository<User> implements BaseRepository<U
   }
 
   public async findOneWhere(
-    column: string,
+    column: keyof User,
     value: string | number,
     operator = '=',
   ): Promise<User | null> {

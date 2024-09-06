@@ -1,5 +1,7 @@
-import { ObjectLiteral, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
-export default interface BaseRepository<T extends ObjectLiteral> extends Repository<T> {
-  findOneWhere: (column: string, value: string | number, operator: string) => Promise<T | null>;
+import { BaseEntity } from './entity';
+
+export default interface BaseRepository<T extends BaseEntity> extends Repository<T> {
+  findOneWhere: (column: keyof T, value: string | number, operator: string) => Promise<T | null>;
 }

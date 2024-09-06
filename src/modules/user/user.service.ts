@@ -1,8 +1,8 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 
 import { compare, hash } from 'bcrypt';
-import { Response, Request } from 'express';
-import { GraphQLError } from 'graphql';
+import dayjs from 'dayjs';
+import { Request, Response } from 'express';
 import { Redis } from 'ioredis';
 import { sign } from 'jsonwebtoken';
 
@@ -14,7 +14,14 @@ import { Inject, Injectable } from '../../types/inversify';
 import { getEnv, mutationReturn, verifyToken } from '../../utils/helpers';
 
 import { User } from './user.entity';
-import { ChangePasswordInput, EditInfoInput, LoginInput, RegisterInput } from './user.input';
+import {
+  InvalidCookiesException,
+  InvalidTokenException,
+  UserExistException,
+  UserNotFoundException,
+  WrongPassException,
+} from './user.exception';
+import { ChangePasswordInput, LoginInput, RegisterInput } from './user.input';
 import { UserRepository } from './user.repository';
 import { UserTokens } from './user.type';
 
@@ -27,44 +34,53 @@ export class UserService implements Service<User> {
 
   public async findById(id: string): Promise<User> {
     const user = await this.userRepository.findOneWhere('id', id);
-    if (!user) throw new GraphQLError('User not found!');
+    if (!user) throw new UserNotFoundException();
     return user;
   }
 
   public async register(input: RegisterInput): Promise<User> {
-    let { password } = input;
-    password = await hash(password, +getEnv('SALT_ROUND'));
-    const newUser = this.userRepository.create({ ...input, password });
-    await this.userRepository.save(newUser);
+    const { password } = input;
+    const hashedPassword = await hash(password, +getEnv('SALT_ROUND'));
+
+    let user = await this.userRepository.findOneWhere('username', input.username);
+    if (user) throw new UserExistException('username');
+
+    user = await this.userRepository.findOneWhere('email', input.email);
+    if (user) throw new UserExistException('email');
+
+    user = await this.userRepository.findOneWhere('phoneNumber', input.phoneNumber);
+    if (user) throw new UserExistException('phoneNumber');
+
+    const newUser = await this.userRepository.save({ ...input, password: hashedPassword });
+
     return newUser;
   }
 
   public async login(input: LoginInput, { res }: Context): Promise<UserTokens> {
-    const { password, usernameOrEmailOrPhone } = input;
+    const { password, usernameOrEmailOrPhone, hasRefresh } = input;
     const user = await this.userRepository.findOneBy([
       { username: usernameOrEmailOrPhone },
       { email: usernameOrEmailOrPhone },
       { phoneNumber: usernameOrEmailOrPhone },
     ]);
 
-    if (!user) throw new GraphQLError('Invalid credentials');
+    if (!user) throw new UserNotFoundException();
     const isValidPass = await compare(password, user.password);
-    if (!isValidPass) throw new GraphQLError('Invalid credentials');
+    if (!isValidPass) throw new WrongPassException();
 
     const { accessToken, refreshToken } = this.createTokens(user.id);
-
-    await this.userRepository.save(user);
 
     /*
       Best approach is to use a hash to save refresh token: https://redis.io/docs/latest/develop/data-types/hashes/,
       but unfortunately ioredis don't support HEXPIRE yet and we need it to set an expiration on a field in the hash.
       The next best approach is to store on on keys with format refreshToken:userId:Token
     */
-    const key = `${REDIS_KEY.REFRESH_TOKEN}${user.id}:${refreshToken}`;
-    const { exp } = (await verifyToken(refreshToken, getEnv('SECRET_REFRESH'))) as AuthContext;
-    await this.store.set(key, refreshToken, 'EXAT', exp);
-
-    this.setCookie(res, 'rf', refreshToken);
+    if (hasRefresh) {
+      const key = `${REDIS_KEY.REFRESH_TOKEN}${user.id}:${refreshToken}`;
+      const { exp } = (await verifyToken(refreshToken, getEnv('SECRET_REFRESH'))) as AuthContext;
+      await this.store.set(key, refreshToken, 'EXAT', exp);
+      this.setCookie(res, 'rf', refreshToken);
+    }
 
     return {
       accessToken,
@@ -92,19 +108,16 @@ export class UserService implements Service<User> {
     }
   }
 
-  public async refreshToken(ctx: Required<Context>): Promise<UserTokens> {
-    const {
-      auth: { userId },
-      res,
-      req,
-    } = ctx;
+  public async refreshToken(ctx: Context): Promise<UserTokens> {
+    const { res, req } = ctx;
     const cookieName = `${getEnv('COOKIE_NAME')}:rf`;
     const refreshToken = this.getCookie(req, cookieName);
 
     const refreshTokenAuth = await verifyToken(refreshToken, getEnv('SECRET_REFRESH'));
 
-    if (!refreshTokenAuth || refreshTokenAuth.userId !== userId)
-      throw new GraphQLError('Invalid refresh token');
+    if (!refreshTokenAuth) throw new InvalidTokenException();
+    const { userId } = refreshTokenAuth;
+    await this.findById(refreshTokenAuth.userId);
 
     const refreshTokenKey = `${REDIS_KEY.REFRESH_TOKEN}${userId}:${refreshToken}`;
     const storeValueToken = this.store.get(refreshTokenKey);
@@ -114,7 +127,7 @@ export class UserService implements Service<User> {
     if (!storeValueToken) {
       await this.storeDelMulti(`${REDIS_KEY.REFRESH_TOKEN}${userId}:*`);
     }
-    await this.logout(ctx);
+    await this.logout({ auth: refreshTokenAuth, req, res });
 
     const { accessToken, refreshToken: newRefreshToken } = this.createTokens(userId);
     const { exp } = (await verifyToken(newRefreshToken, getEnv('SECRET_REFRESH'))) as AuthContext;
@@ -133,13 +146,13 @@ export class UserService implements Service<User> {
     return userList;
   }
 
-  public async editInfo(input: EditInfoInput, userId: string): Promise<User> {
+  public async editInfo(input: Partial<User>, userId: string): Promise<User> {
     const update = await mutationReturn<User>(
       // User query builder because of issue https://github.com/typeorm/typeorm/issues/2415
       this.userRepository
         .createQueryBuilder()
         .update(User)
-        .set({ ...input })
+        .set({ ...input, updatedAt: dayjs().toISOString() })
         .where('id = :id ', {
           id: userId,
         })
@@ -150,24 +163,13 @@ export class UserService implements Service<User> {
   }
 
   public async changePassword(input: ChangePasswordInput, userId: string): Promise<User> {
-    const user = await this.userRepository.findOneBy({ id: userId });
+    const user = await this.findById(userId);
     // Check password hash
-    if (!user) throw new GraphQLError('Invalid credentials');
     const isValidPass = await compare(input.oldPassword, user.password);
-    if (!isValidPass) throw new GraphQLError('Invalid credentials');
+    if (!isValidPass) throw new WrongPassException();
 
     const newPassword = await hash(input.newPassword, +getEnv('SALT_ROUND'));
-    return mutationReturn<User>(
-      this.userRepository
-        .createQueryBuilder()
-        .update(User)
-        .set({ password: newPassword })
-        .where('id = :id ', {
-          id: userId,
-        })
-        .returning('*')
-        .execute(),
-    );
+    return this.editInfo({ password: newPassword }, userId);
   }
 
   private createTokens(userId: string): UserTokens & { refreshToken: string } {
@@ -196,14 +198,14 @@ export class UserService implements Service<User> {
 
   private getCookie(req: Request, name: string): string {
     const cookieValue = req.cookies[name];
-    if (!cookieValue) throw new GraphQLError('Invalid cookie');
+    if (!cookieValue) throw new InvalidCookiesException();
 
     const decryptedValue = this.aesDecrypt(cookieValue);
 
     return decryptedValue;
   }
 
-  private aesEncrypt(text: string) {
+  private aesEncrypt(text: string): string {
     const iv = randomBytes(16);
     const cipher = createCipheriv('aes-256-cbc', Buffer.from(getEnv('ENCRYPTION_KEY')), iv);
 
@@ -214,7 +216,7 @@ export class UserService implements Service<User> {
     return iv.toString('hex') + ':' + encrypted.toString('hex');
   }
 
-  private aesDecrypt(text: string) {
+  private aesDecrypt(text: string): string {
     const textParts = text.split(':');
     const iv = Buffer.from(textParts.shift()!, 'hex');
     const encryptedText = Buffer.from(textParts.join(':'), 'hex');

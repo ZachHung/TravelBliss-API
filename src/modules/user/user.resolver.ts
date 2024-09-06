@@ -11,7 +11,7 @@ import { UserService } from './user.service';
 import { UserTokens } from './user.type';
 
 @Injectable()
-@Resolver(() => User)
+@Resolver((_type) => User)
 export class UserResolver {
   constructor(@Inject(TOKEN.Services.User) private readonly userService: UserService) {}
 
@@ -23,7 +23,7 @@ export class UserResolver {
   }
 
   @Authorized(Role.ADMIN)
-  @Query(() => [User])
+  @Query((_type) => [User])
   public async allUser(): Promise<User[]> {
     const response = await this.userService.getAll();
     return response;
@@ -41,9 +41,8 @@ export class UserResolver {
     return response;
   }
 
-  @Authorized()
   @Mutation((_type) => UserTokens)
-  public async refreshToken(@Ctx() ctx: Required<Context>): Promise<UserTokens> {
+  public async refreshToken(@Ctx() ctx: Context): Promise<UserTokens> {
     const response = await this.userService.refreshToken(ctx);
     return response;
   }
@@ -66,7 +65,7 @@ export class UserResolver {
   }
 
   @Authorized()
-  @Mutation(() => User)
+  @Mutation((_type) => User)
   public async changePasswordUser(
     @Arg('input') input: ChangePasswordInput,
     @Ctx() { auth: { userId } }: Required<Context>,

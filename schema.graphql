@@ -14,14 +14,14 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 scalar DateTimeISO
 
 input EditInfoInput {
-  age: Float
+  birthday: DateTimeISO
   email: String
-  firstName: String
-  lastName: String
+  fullName: String
   username: String
 }
 
 input LoginInput {
+  hasRefresh: Boolean
   password: String!
   usernameOrEmailOrPhone: String!
 }
@@ -41,10 +41,9 @@ type Query {
 }
 
 input RegisterInput {
-  age: Float!
+  birthday: DateTimeISO!
   email: String!
-  firstName: String!
-  lastName: String!
+  fullName: String!
   password: String!
   phoneNumber: String!
   username: String!
@@ -60,10 +59,12 @@ enum Role {
 }
 
 type User {
-  age: Float!
+  age: Int!
+  birthday: DateTimeISO!
   createdAt: DateTimeISO!
   email: String!
   firstName: String!
+  fullName: String!
   id: String!
   lastName: String!
   password: String
