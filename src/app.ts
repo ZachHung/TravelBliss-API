@@ -25,6 +25,7 @@ export const bootstrap = async (): Promise<void> => {
   await PostgresDataSource.initialize();
   const schema = await buildSchema({
     emitSchemaFile: true,
+    validate: true,
     resolvers: resolvers,
     globalMiddlewares: [ErrorLoggerMiddleware],
     authChecker: CustomAuthChecker,

@@ -18,7 +18,8 @@ export const getEnv = (name: string): string => {
 export const mutationReturn = async <T>(
   mutation: Promise<UpdateResult | DeleteResult | InsertResult>,
 ): Promise<T> => {
-  return (await mutation).raw[0];
+  const result = await mutation;
+  return result.raw[0];
 };
 
 export const verifyToken = async (

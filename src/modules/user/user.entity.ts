@@ -1,4 +1,5 @@
-import { Authorized, Field, ObjectType } from 'type-graphql';
+import dayjs from 'dayjs';
+import { Authorized, Field, Int, ObjectType } from 'type-graphql';
 import { Column, Entity } from 'typeorm';
 
 import { BaseEntity } from '../../core/shared/entity';
@@ -9,15 +10,26 @@ import { Role } from '../../types/enums';
 export class User extends BaseEntity {
   @Field()
   @Column()
-  public readonly firstName: string;
+  public readonly fullName: string;
+
+  @Field()
+  public firstName(): string {
+    return this.fullName.split(' ')[0];
+  }
+
+  @Field()
+  public lastName(): string {
+    return this.fullName.split(' ').slice(-1)[0];
+  }
 
   @Field()
   @Column()
-  public readonly lastName: string;
+  public readonly birthday: Date;
 
-  @Field()
-  @Column()
-  public readonly age: number;
+  @Field((_type) => Int)
+  public age(): number {
+    return dayjs().year() - dayjs(this.birthday).year();
+  }
 
   @Authorized(Role.ADMIN)
   @Field({ nullable: true })
