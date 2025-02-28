@@ -40,6 +40,7 @@ export class UserService implements Service<User> {
 
   public async register(input: RegisterInput): Promise<User> {
     const { password } = input;
+
     const hashedPassword = await hash(password, +getEnv('SALT_ROUND'));
 
     let user = await this.userRepository.findOneWhere('username', input.username);
@@ -51,7 +52,10 @@ export class UserService implements Service<User> {
     user = await this.userRepository.findOneWhere('phoneNumber', input.phoneNumber);
     if (user) throw new UserExistException('phoneNumber');
 
-    const newUser = await this.userRepository.save({ ...input, password: hashedPassword });
+    const newUser = await this.userRepository.save({
+      ...input,
+      password: hashedPassword,
+    });
 
     return newUser;
   }

@@ -47,7 +47,7 @@ if (process.env.NODE_ENV !== 'production')
             metadata: {
               metadata: { stack },
             },
-          }) => {
+          }: Record<string, any>) => {
             if (stack) return `[${env}] [${timestamp}] [${level}]: ${stack}`;
             return `[${env}] [${timestamp}] [${level}]: ${message}`;
           },

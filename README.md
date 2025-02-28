@@ -36,7 +36,7 @@ Create a `.env` file at the root of the project with this structure:
 PORT =
 POSTGRES_HOST =
 POSTGRES_USER =
-POSTGRES_PASS =
+POSTGRES_PASSWORD =
 POSTGRES_PORT =
 POSTGRES_DB =
 SECRET_JWT =
