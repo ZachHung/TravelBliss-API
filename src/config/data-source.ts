@@ -10,7 +10,7 @@ export const postgresConfig: DataSourceOptions = {
   host: getEnv('POSTGRES_HOST'),
   port: +getEnv('POSTGRES_PORT'),
   username: getEnv('POSTGRES_USER'),
-  password: getEnv('POSTGRES_PASS'),
+  password: getEnv('POSTGRES_PASSWORD'),
   database: getEnv('POSTGRES_DB'),
   synchronize: false,
   logging: getEnv('NODE_ENV') === 'production',
