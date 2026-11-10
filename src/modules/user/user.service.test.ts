@@ -31,7 +31,7 @@ const fakeRedis = () => {
     unlink: async (...keys: string[]) => keys.forEach((key) => data.delete(key)),
     scanStream: ({ match }: { match: string }) =>
       (async function* () {
-        const prefix = match.replace('*', '');
+        const prefix = match.replace(/\*/g, '');
         yield [...data.keys()].filter((key) => key.startsWith(prefix));
       })(),
   };
