@@ -36,7 +36,7 @@ const fakeRedis = () => {
 
 const setup = () => {
   const store = fakeRedis();
-  const users = { findById: jest.fn().mockResolvedValue({ id: 'u1' }) };
+  const users = { findById: vi.fn().mockResolvedValue({ id: 'u1' }) };
   const service = new SessionService(users as never, store as never);
   return { store, users, service };
 };

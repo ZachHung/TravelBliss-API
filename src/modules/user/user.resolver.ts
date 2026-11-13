@@ -1,7 +1,6 @@
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 
 import TOKEN from '../../core/container/types.container';
-import { Context } from '../../types';
 import { Role } from '../../types/enums';
 import { Inject, Injectable } from '../../types/inversify';
 import { SessionService } from '../session/session.service';
@@ -10,6 +9,8 @@ import { UserTokens } from '../session/session.type';
 import { User } from './user.entity';
 import { ChangePasswordInput, EditInfoInput, LoginInput, RegisterInput } from './user.input';
 import { UserService } from './user.service';
+
+import type { Context } from '../../types';
 
 @Injectable()
 @Resolver((_type) => User)

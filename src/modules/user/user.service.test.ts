@@ -24,7 +24,7 @@ const setup = async () => {
         )
         ? user
         : null,
-    save: jest.fn(),
+    save: vi.fn(),
   };
   const service = new UserService(repo as never);
   return { repo, service };
