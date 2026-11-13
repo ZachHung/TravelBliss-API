@@ -1,68 +1,13 @@
-# Travel Bliss API
+# Travel Bliss API (retired)
 
-API for the Travel Bliss project
+This repository is retired and read-only. The API now lives in the TravelBliss monorepo:
 
-## Prerequisite
+**[ZachHung/TravelBliss → `apps/api`](https://github.com/ZachHung/TravelBliss/tree/main/apps/api)**
 
-- NodeJS v22
-- Posgres
+- It moved in [ZachHung/TravelBliss#114](https://github.com/ZachHung/TravelBliss/pull/114) with its full git history
+  (imported with `git subtree` from `46dceea`, so `git blame` there still credits these commits).
+- The web client now builds against the schema in the same repo, so open issues and pull requests there, not here.
+- Getting started, env variables and Docker: see the
+  [monorepo README](https://github.com/ZachHung/TravelBliss#readme).
 
-## Getting Started
-
-### Clone this repo
-
-```bash
-git clone https://github.com/ZachHung/TravelBliss-API
-cd TravelBliss-API
-```
-
-### Install `pnpm`
-
-```bash
-npm install -g pnpm
-```
-
-### Installing packages
-
-```bash
-pnpm i
-```
-
-### Create a `.env` file
-
-Create a `.env` file at the root of the project with this structure:
-
-```
-PORT =
-POSTGRES_HOST =
-POSTGRES_USER =
-POSTGRES_PASSWORD =
-POSTGRES_PORT =
-POSTGRES_DB =
-SECRET_JWT =
-JWT_EXPIRED =
-SECRET_REFRESH =
-REFRESH_EXPIRED =
-SALT_ROUND =
-CORS_ORIGIN = (optional, defaults to http://localhost:5173)
-```
-
-### Run the migration for the Postgres DB
-
-```bash
-pnpm migration:run
-```
-
-### Running the API
-
-#### In Dev mode
-
-```bash
-pnpm start:dev
-```
-
-#### In Non-dev mode
-
-```bash
-pnpm build && pnpm start
-```
+The code below stays as it was at `46dceea` for reference only; it no longer receives fixes.
