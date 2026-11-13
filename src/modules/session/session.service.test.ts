@@ -58,7 +58,7 @@ describe('SessionService', () => {
   it('rotates the refresh token, and rejects and revokes it when used twice', async () => {
     const { service, store } = setup();
     const startRes = fakeRes();
-    await service.start('u1', true, ctx(startRes));
+    await service.start('u1', { remember: true }, ctx(startRes));
     const cookies = startRes.cookies;
 
     const firstRes = fakeRes();
@@ -78,7 +78,7 @@ describe('SessionService', () => {
     const { service } = setup();
     const res = fakeRes();
 
-    await service.start('u1', false, ctx(res));
+    await service.start('u1', { remember: false }, ctx(res));
 
     expect(res.cookies).toEqual({});
   });
@@ -90,14 +90,14 @@ describe('SessionService', () => {
     });
 
     const startRes = fakeRes();
-    await service.start('u1', true, ctx(startRes));
+    await service.start('u1', { remember: true }, ctx(startRes));
     users.findById.mockRejectedValue(new Error('gone'));
     await expect(service.refresh(ctx(fakeRes(), startRes.cookies))).rejects.toThrow('gone');
   });
 
   it('authenticate accepts a valid access token, and rejects it after end()', async () => {
     const { service } = setup();
-    const { accessToken } = await service.start('u1', false, ctx(fakeRes()));
+    const { accessToken } = await service.start('u1', { remember: false }, ctx(fakeRes()));
     const header = `Bearer ${accessToken}`;
 
     const auth = await service.authenticate(header);
@@ -110,7 +110,7 @@ describe('SessionService', () => {
 
   it('authenticate rejects a token whose blacklist key is set', async () => {
     const { service, store } = setup();
-    const { accessToken } = await service.start('u1', false, ctx(fakeRes()));
+    const { accessToken } = await service.start('u1', { remember: false }, ctx(fakeRes()));
     store.data.set(`blacklist:${accessToken}`, accessToken);
 
     expect(await service.authenticate(`Bearer ${accessToken}`)).toBeUndefined();

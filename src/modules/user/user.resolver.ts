@@ -43,7 +43,7 @@ export class UserResolver {
   @Mutation((_type) => UserTokens)
   public async login(@Arg('input') input: LoginInput, @Ctx() ctx: Context): Promise<UserTokens> {
     const user = await this.userService.authenticate(input);
-    return this.sessionService.start(user.id, !!input.hasRefresh, ctx);
+    return this.sessionService.start(user.id, { remember: !!input.hasRefresh }, ctx);
   }
 
   @Mutation((_type) => UserTokens)

@@ -54,7 +54,11 @@ export class SessionService {
     return auth;
   }
 
-  public async start(userId: string, remember: boolean, { res }: Context): Promise<UserTokens> {
+  public async start(
+    userId: string,
+    { remember }: { remember: boolean },
+    { res }: Context,
+  ): Promise<UserTokens> {
     const { accessToken, refreshToken } = this.createTokens(userId);
 
     /*
@@ -68,7 +72,7 @@ export class SessionService {
   }
 
   public async refresh({ res, req }: Context): Promise<UserTokens> {
-    const refreshToken = this.getCookie(req, refreshCookieName());
+    const refreshToken = this.requireCookie(req, refreshCookieName());
 
     const refreshTokenAuth = verifyToken(refreshToken, getEnv('SECRET_REFRESH'));
     if (!refreshTokenAuth) throw new InvalidTokenException();
@@ -79,7 +83,7 @@ export class SessionService {
     const used = await this.store.del(refreshKey(userId, refreshToken));
     if (!used) {
       // Reuse of a rotated or logged-out token: revoke every refresh token of this user.
-      await this.storeDelMulti(`${REDIS_KEY.REFRESH_TOKEN}${userId}:*`);
+      await this.deleteByPattern(`${REDIS_KEY.REFRESH_TOKEN}${userId}:*`);
       throw new InvalidTokenException();
     }
 
@@ -147,7 +151,7 @@ export class SessionService {
     }
   }
 
-  private getCookie(req: Request, name: string): string {
+  private requireCookie(req: Request, name: string): string {
     const value = this.readCookie(req, name);
     if (!value) throw new InvalidCookiesException();
     return value;
@@ -177,7 +181,7 @@ export class SessionService {
     return decrypted.toString();
   }
 
-  private async storeDelMulti(match: string): Promise<void> {
+  private async deleteByPattern(match: string): Promise<void> {
     for await (const keys of this.store.scanStream({ match, count: 100 }) as AsyncIterable<
       string[]
     >) {
