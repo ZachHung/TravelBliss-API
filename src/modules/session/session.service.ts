@@ -19,6 +19,10 @@ const REDIS_KEY = {
   REFRESH_TOKEN: 'refreshToken:',
 } as const;
 
+const refreshCookieName = (): string => `${getEnv('COOKIE_NAME')}:rf`;
+const refreshKey = (userId: string, token: string): string =>
+  `${REDIS_KEY.REFRESH_TOKEN}${userId}:${token}`;
+
 const verifyToken = (token: string, secret: string): AuthContext | undefined => {
   if (!token) return;
   try {
@@ -64,7 +68,7 @@ export class SessionService {
   }
 
   public async refresh({ res, req }: Context): Promise<UserTokens> {
-    const refreshToken = this.getCookie(req, `${getEnv('COOKIE_NAME')}:rf`);
+    const refreshToken = this.getCookie(req, refreshCookieName());
 
     const refreshTokenAuth = verifyToken(refreshToken, getEnv('SECRET_REFRESH'));
     if (!refreshTokenAuth) throw new InvalidTokenException();
@@ -72,7 +76,7 @@ export class SessionService {
     await this.users.findById(userId);
 
     // DEL is atomic: only the first caller removes the key, so each refresh token works once.
-    const used = await this.store.del(`${REDIS_KEY.REFRESH_TOKEN}${userId}:${refreshToken}`);
+    const used = await this.store.del(refreshKey(userId, refreshToken));
     if (!used) {
       // Reuse of a rotated or logged-out token: revoke every refresh token of this user.
       await this.storeDelMulti(`${REDIS_KEY.REFRESH_TOKEN}${userId}:*`);
@@ -93,9 +97,9 @@ export class SessionService {
       // Block the access token first: users without "remember me" have no refresh cookie.
       await this.store.set(REDIS_KEY.BLACK_LIST + accessToken, accessToken, 'EXAT', exp);
 
-      const cookieName = `${getEnv('COOKIE_NAME')}:rf`;
+      const cookieName = refreshCookieName();
       const refreshToken = this.readCookie(req, cookieName);
-      if (refreshToken) await this.store.del(`${REDIS_KEY.REFRESH_TOKEN}${userId}:${refreshToken}`);
+      if (refreshToken) await this.store.del(refreshKey(userId, refreshToken));
 
       res.clearCookie(cookieName);
       return true;
@@ -107,13 +111,8 @@ export class SessionService {
 
   private async storeRefreshToken(userId: string, refreshToken: string, res: Response) {
     const { exp } = verifyToken(refreshToken, getEnv('SECRET_REFRESH')) as AuthContext;
-    await this.store.set(
-      `${REDIS_KEY.REFRESH_TOKEN}${userId}:${refreshToken}`,
-      refreshToken,
-      'EXAT',
-      exp,
-    );
-    this.setCookie(res, 'rf', refreshToken);
+    await this.store.set(refreshKey(userId, refreshToken), refreshToken, 'EXAT', exp);
+    this.setRefreshCookie(res, refreshToken);
   }
 
   private createTokens(userId: string): UserTokens & { refreshToken: string } {
@@ -129,8 +128,8 @@ export class SessionService {
     return { accessToken, refreshToken };
   }
 
-  private setCookie(res: Response, name: string, value: string): void {
-    res.cookie(`${getEnv('COOKIE_NAME')}:${name}`, this.aesEncrypt(value), {
+  private setRefreshCookie(res: Response, value: string): void {
+    res.cookie(refreshCookieName(), this.aesEncrypt(value), {
       maxAge: 1000 * 60 * 60 * 24 * 30,
       httpOnly: true,
       sameSite: getEnv('NODE_ENV') === 'production' ? 'none' : 'lax',

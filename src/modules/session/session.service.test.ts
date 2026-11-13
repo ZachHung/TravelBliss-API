@@ -108,6 +108,14 @@ describe('SessionService', () => {
     expect(await service.authenticate(header)).toBeUndefined();
   });
 
+  it('authenticate rejects a token whose blacklist key is set', async () => {
+    const { service, store } = setup();
+    const { accessToken } = await service.start('u1', false, ctx(fakeRes()));
+    store.data.set(`blacklist:${accessToken}`, accessToken);
+
+    expect(await service.authenticate(`Bearer ${accessToken}`)).toBeUndefined();
+  });
+
   it('authenticate rejects a missing, malformed or wrongly signed token', async () => {
     const { service } = setup();
     const forged = sign({ userId: 'u1' }, 'other-secret');
